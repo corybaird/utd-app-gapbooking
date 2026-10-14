@@ -1,0 +1,17 @@
+{
+  "name": "utokyo-booking-system",
+  "version": "1.0.0",
+  "description": "UTokyo English conversation booking system on Google Apps Script",
+  "scripts": {
+    "push": "clasp push",
+    "push:watch": "clasp push --watch",
+    "pull": "clasp pull",
+    "deploy": "clasp deploy",
+    "open": "clasp open"
+  },
+  "devDependencies": {
+    "@google/clasp": "^2.4.2",
+    "@types/google-apps-script": "^1.0.83",
+    "typescript": "^5.4.5"
+  }
+}
