@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>UTokyo English Conversation Booking System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
+  <style>
+    .slot-btn {
+      transition: all 0.15s ease-in-out;
+    }
+    .slot-btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    .modal-backdrop {
+      background-color: rgba(17, 24, 39, 0.6);
+    }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen">
+
+  <!-- Header -->
+  <header class="bg-blue-900 text-white shadow-md">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center space-y-2 md:space-y-0">
+      <div>
+        <h1 class="text-xl font-bold tracking-tight">UTokyo English Conversation Session Booking</h1>
+        <p class="text-xs text-blue-200">Online 30-minute sessions via Zoom | Mon–Fri (JST)</p>
+      </div>
+      <div class="flex items-center space-x-3">
+        <button id="btnOpenMyBookings" class="text-xs bg-blue-800 hover:bg-blue-700 text-white font-medium py-2 px-3 rounded border border-blue-600 transition">
+          My Bookings & Cancellation
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Notification Banner -->
+  <div id="alertBanner" class="hidden max-w-7xl mx-auto mt-4 px-4">
+    <div id="alertBannerContent" class="p-4 rounded-md text-sm font-medium"></div>
+  </div>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-4 py-6">
+
+    <!-- Calendar Controls -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6 flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0">
+      <div class="flex items-center space-x-2">
+        <button id="btnPrevWeek" class="px-3 py-1.5 border border-gray-300 rounded text-sm font-medium hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed">
+          &larr; Previous Week
+        </button>
+        <button id="btnNextWeek" class="px-3 py-1.5 border border-gray-300 rounded text-sm font-medium hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed">
+          Next Week &rarr;
+        </button>
+        <button id="btnCurrentWeek" class="px-3 py-1.5 text-xs text-blue-700 hover:underline">
+          Jump to Default
+        </button>
+      </div>
+
+      <div class="text-center">
+        <span id="calendarDateRange" class="text-base font-semibold text-gray-900">Loading week...</span>
+        <span id="rotationNotice" class="block text-xs text-gray-500">Weekly booking closes Friday 23:29</span>
+      </div>
+
+      <div class="text-xs text-gray-500 flex items-center space-x-3">
+        <span class="flex items-center"><span class="w-2.5 h-2.5 bg-green-500 rounded-full inline-block mr-1"></span>Available</span>
+        <span class="flex items-center"><span class="w-2.5 h-2.5 bg-gray-300 rounded-full inline-block mr-1"></span>Full / Closed</span>
+      </div>
+    </div>
+
+    <!-- Calendar Grid Loading Spinner -->
+    <div id="loadingCalendar" class="py-16 text-center">
+      <svg class="animate-spin h-8 w-8 text-blue-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <p class="text-sm text-gray-500 mt-3">Loading calendar slots...</p>
+    </div>
+
+    <!-- Calendar Grid Container -->
+    <div id="calendarContainer" class="hidden overflow-x-auto bg-white rounded-lg shadow-sm border border-gray-200">
+      <div id="calendarDaysGrid" class="divide-y divide-gray-200">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Booking Modal -->
+  <div id="bookingModal" class="fixed inset-0 modal-backdrop hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-lg shadow-xl max-w-lg w-full overflow-hidden">
+      <div class="bg-blue-900 px-6 py-4 flex justify-between items-center text-white">
+        <h3 class="font-semibold text-lg">Confirm Your Booking</h3>
+        <button id="btnCloseModal" class="text-blue-200 hover:text-white">&times;</button>
+      </div>
+
+      <div class="p-6">
+        <!-- Slot Details Summary Card -->
+        <div class="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4 text-xs">
+          <div class="grid grid-cols-2 gap-2 text-gray-700">
+            <div><span class="font-semibold text-gray-900">Date:</span> <span id="modalDate">-</span></div>
+            <div><span class="font-semibold text-gray-900">Time:</span> <span id="modalTime">-</span></div>
+            <div><span class="font-semibold text-gray-900">Course:</span> <span id="modalCourse">-</span></div>
+            <div><span class="font-semibold text-gray-900">Format:</span> <span id="modalFormat">-</span></div>
+          </div>
+        </div>
+
+        <!-- Booking Form -->
+        <form id="bookingForm" class="space-y-3">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Temporary Student ID (Alphanumeric) *</label>
+            <input type="text" id="inputUserId" required pattern="^[a-zA-Z0-9]+$" placeholder="e.g. 98200123" class="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none">
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 mb-1">Family Name (Alphabetic) *</label>
+              <input type="text" id="inputFamilyName" required pattern="^[a-zA-Z\s]+$" placeholder="e.g. Todai" class="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 mb-1">Given Name (Alphabetic) *</label>
+              <input type="text" id="inputGivenName" required pattern="^[a-zA-Z\s]+$" placeholder="e.g. Taro" class="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Email Address (UTokyo / Personal) *</label>
+            <input type="email" id="inputEmail" required placeholder="e.g. student@g.ecc.u-tokyo.ac.jp" class="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none">
+          </div>
+
+          <div id="modalError" class="hidden text-xs text-red-600 bg-red-50 p-2.5 rounded border border-red-200"></div>
+
+          <div class="text-xs text-gray-500 pt-1">
+            Rules: Max 1 slot per day across all courses, and max 5 slots per week.
+          </div>
+
+          <div class="pt-3 flex justify-end space-x-2">
+            <button type="button" id="btnCancelModal" class="px-4 py-2 border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-100">Cancel</button>
+            <button type="submit" id="btnSubmitBooking" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-semibold flex items-center justify-center">
+              <span id="btnSubmitText">Confirm Booking</span>
+              <svg id="btnSubmitSpinner" class="animate-spin ml-2 h-4 w-4 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cancellation & My Bookings Modal -->
+  <div id="myBookingsModal" class="fixed inset-0 modal-backdrop hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-lg shadow-xl max-w-lg w-full overflow-hidden">
+      <div class="bg-gray-800 px-6 py-4 flex justify-between items-center text-white">
+        <h3 class="font-semibold text-lg">My Bookings</h3>
+        <button id="btnCloseMyBookingsModal" class="text-gray-300 hover:text-white">&times;</button>
+      </div>
+      <div class="p-6">
+        <div class="mb-4">
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Enter your registered email address</label>
+          <div class="flex space-x-2">
+            <input type="email" id="inputSearchEmail" placeholder="student@g.ecc.u-tokyo.ac.jp" class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none">
+            <button id="btnSearchBookings" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded">Search</button>
+          </div>
+        </div>
+
+        <div id="userBookingsList" class="space-y-2 max-h-64 overflow-y-auto">
+          <p class="text-xs text-gray-500 text-center py-4">Search with your email to see active bookings</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentWeekOffset = 0;
+    let cachedCalendarData = null;
+    let selectedSlot = null;
+
+    window.onload = function() {
+      loadCalendar(0);
+
+      const prefillAction = '<?= prefillAction ?>';
+      const prefillId = '<?= prefillBookingId ?>';
+      const prefillEmail = '<?= prefillEmail ?>';
+
+      if (prefillAction === 'cancel' && prefillId && prefillEmail) {
+        if (confirm('Do you confirm cancelling booking ID ' + prefillId + '?')) {
+          executeCancellation(prefillId, prefillEmail);
+        }
+      }
+    };
+
+    function loadCalendar(offset) {
+      document.getElementById('loadingCalendar').classList.remove('hidden');
+      document.getElementById('calendarContainer').classList.add('hidden');
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(renderCalendar)
+          .withFailureHandler(handleCalendarError)
+          .apiGetCalendar(offset);
+      } else {
+        console.warn('Running outside Google Apps Script environment');
+      }
+    }
+
+    function renderCalendar(jsonString) {
+      document.getElementById('loadingCalendar').classList.add('hidden');
+      document.getElementById('calendarContainer').classList.remove('hidden');
+
+      const response = JSON.parse(jsonString);
+      if (!response.success) {
+        showBanner('Error loading calendar: ' + response.error, 'error');
+        return;
+      }
+
+      const vm = response.data;
+      cachedCalendarData = vm;
+      currentWeekOffset = vm.weekOffset;
+
+      document.getElementById('calendarDateRange').textContent = vm.currentWeekStart + ' to ' + vm.currentWeekEnd;
+      document.getElementById('btnPrevWeek').disabled = !vm.canNavigatePrev;
+      document.getElementById('btnNextWeek').disabled = !vm.canNavigateNext;
+
+      const grid = document.getElementById('calendarDaysGrid');
+      grid.innerHTML = '';
+
+      vm.days.forEach(day => {
+        const dayCard = document.createElement('div');
+        dayCard.className = 'p-4 ' + (day.isHoliday ? 'bg-gray-100' : 'bg-white');
+
+        let dayHeaderHtml = `
+          <div class="flex items-center justify-between mb-3 border-b pb-2">
+            <div>
+              <span class="text-base font-bold text-gray-800">${day.dateString} (${day.dayOfWeek})</span>
+              ${day.holidayName ? `<span class="ml-2 text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded">${day.holidayName}</span>` : ''}
+            </div>
+            ${!day.isBookable && !day.isHoliday ? `<span class="text-xs text-gray-400">Acceptance closed</span>` : ''}
+          </div>
+        `;
+
+        let slotsHtml = '<div class="space-y-3">';
+
+        ['Morning (10:00 - 12:00)', 'Afternoon (15:00 - 17:00)'].forEach((sectionTitle, sIdx) => {
+          const isMorningSection = sIdx === 0;
+          const sectionSlots = vm.timeSlots.filter(s => s.isMorning === isMorningSection);
+
+          slotsHtml += `
+            <div>
+              <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">${sectionTitle}</h4>
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
+          `;
+
+          sectionSlots.forEach(slot => {
+            slotsHtml += `
+              <div class="border rounded p-2 bg-gray-50">
+                <div class="font-bold text-xs text-gray-700 mb-1.5">${slot.time}</div>
+                <div class="space-y-1">
+            `;
+
+            vm.courses.forEach(course => {
+              const availability = day.slots[slot.time][course.id];
+              const isAvailable = availability.isBookable;
+
+              slotsHtml += `
+                <button 
+                  type="button" 
+                  class="slot-btn w-full text-left px-2 py-1 text-xs rounded border flex justify-between items-center ${
+                    isAvailable 
+                      ? 'bg-green-50 border-green-300 text-green-900 hover:bg-green-100 cursor-pointer' 
+                      : 'bg-gray-200 border-gray-300 text-gray-400 cursor-not-allowed'
+                  }"
+                  ${!isAvailable ? 'disabled' : ''}
+                  onclick="openBookingModal('${day.dateString}', '${slot.time}', '${course.id}', '${course.name}', '${course.format}')"
+                >
+                  <span class="truncate">${course.name} (${course.theme})</span>
+                  <span class="ml-1 font-semibold">${isAvailable ? availability.remainingCapacity + ' left' : 'Full'}</span>
+                </button>
+              `;
+            });
+
+            slotsHtml += `</div></div>`;
+          });
+
+          slotsHtml += `</div></div>`;
+        });
+
+        slotsHtml += '</div>';
+        dayCard.innerHTML = dayHeaderHtml + slotsHtml;
+        grid.appendChild(dayCard);
+      });
+    }
+
+    function handleCalendarError(err) {
+      document.getElementById('loadingCalendar').classList.add('hidden');
+      showBanner('Network or script error: ' + (err.message || err), 'error');
+    }
+
+    function openBookingModal(date, time, courseId, courseName, format) {
+      selectedSlot = { date, time, courseId, courseName, format };
+      document.getElementById('modalDate').textContent = date;
+      document.getElementById('modalTime').textContent = time;
+      document.getElementById('modalCourse').textContent = courseName;
+      document.getElementById('modalFormat').textContent = format;
+
+      document.getElementById('modalError').classList.add('hidden');
+      document.getElementById('bookingModal').classList.remove('hidden');
+    }
+
+    function closeBookingModal() {
+      document.getElementById('bookingModal').classList.add('hidden');
+      selectedSlot = null;
+    }
+
+    document.getElementById('bookingForm').onsubmit = function(e) {
+      e.preventDefault();
+      if (!selectedSlot) return;
+
+      const userId = document.getElementById('inputUserId').value.trim();
+      const familyName = document.getElementById('inputFamilyName').value.trim();
+      const givenName = document.getElementById('inputGivenName').value.trim();
+      const email = document.getElementById('inputEmail').value.trim();
+
+      const btnSubmit = document.getElementById('btnSubmitBooking');
+      const btnText = document.getElementById('btnSubmitText');
+      const btnSpinner = document.getElementById('btnSubmitSpinner');
+      const errorDiv = document.getElementById('modalError');
+
+      errorDiv.classList.add('hidden');
+      btnSubmit.disabled = true;
+      btnSpinner.classList.remove('hidden');
+      btnText.textContent = 'Registering...';
+
+      const payload = {
+        userId: userId,
+        familyName: familyName,
+        givenName: givenName,
+        email: email,
+        bookingDate: selectedSlot.date,
+        startTime: selectedSlot.time,
+        courseId: selectedSlot.courseId
+      };
+
+      google.script.run
+        .withSuccessHandler(function(responseJson) {
+          btnSubmit.disabled = false;
+          btnSpinner.classList.add('hidden');
+          btnText.textContent = 'Confirm Booking';
+
+          const res = JSON.parse(responseJson);
+          if (res.success) {
+            closeBookingModal();
+            showBanner(`Booking confirmed successfully! Confirmation email sent to ${email}.`, 'success');
+            loadCalendar(currentWeekOffset);
+          } else {
+            errorDiv.textContent = res.error || 'Failed to complete booking.';
+            errorDiv.classList.remove('hidden');
+          }
+        })
+        .withFailureHandler(function(err) {
+          btnSubmit.disabled = false;
+          btnSpinner.classList.add('hidden');
+          btnText.textContent = 'Confirm Booking';
+          errorDiv.textContent = 'Server error: ' + (err.message || err);
+          errorDiv.classList.remove('hidden');
+        })
+        .apiBookSlot(JSON.stringify(payload));
+    };
+
+    function executeCancellation(bookingId, email) {
+      showBanner('Processing cancellation...', 'info');
+      google.script.run
+        .withSuccessHandler(function(resJson) {
+          const res = JSON.parse(resJson);
+          if (res.success) {
+            showBanner('Booking cancelled successfully. Confirmation notice dispatched.', 'success');
+            loadCalendar(currentWeekOffset);
+          } else {
+            showBanner('Cancellation failed: ' + res.error, 'error');
+          }
+        })
+        .withFailureHandler(function(err) {
+          showBanner('Error cancelling booking: ' + (err.message || err), 'error');
+        })
+        .apiCancelBooking(bookingId, email);
+    }
+
+    document.getElementById('btnSearchBookings').onclick = function() {
+      const email = document.getElementById('inputSearchEmail').value.trim();
+      if (!email) return;
+
+      const container = document.getElementById('userBookingsList');
+      container.innerHTML = '<p class="text-xs text-gray-500 text-center py-2">Searching...</p>';
+
+      google.script.run
+        .withSuccessHandler(function(resJson) {
+          const res = JSON.parse(resJson);
+          if (!res.success || !res.data || res.data.length === 0) {
+            container.innerHTML = '<p class="text-xs text-gray-500 text-center py-2">No active bookings found for this email.</p>';
+            return;
+          }
+
+          container.innerHTML = '';
+          res.data.forEach(b => {
+            const item = document.createElement('div');
+            item.className = 'p-3 bg-gray-50 border rounded flex justify-between items-center text-xs';
+            item.innerHTML = `
+              <div>
+                <div class="font-semibold text-gray-800">${b.bookingDate} at ${b.startTime}</div>
+                <div class="text-gray-500">${b.courseName} | ID: ${b.bookingId.substring(0, 8)}...</div>
+              </div>
+              <button class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs" onclick="executeCancellation('${b.bookingId}', '${b.email}')">Cancel</button>
+            `;
+            container.appendChild(item);
+          });
+        })
+        .withFailureHandler(function(err) {
+          container.innerHTML = '<p class="text-xs text-red-500 text-center py-2">Error loading bookings.</p>';
+        })
+        .apiGetUserBookings(email);
+    };
+
+    function showBanner(message, type) {
+      const banner = document.getElementById('alertBanner');
+      const content = document.getElementById('alertBannerContent');
+      banner.classList.remove('hidden');
+
+      if (type === 'success') {
+        content.className = 'p-3 rounded-md text-sm font-medium bg-green-100 text-green-800 border border-green-200';
+      } else if (type === 'error') {
+        content.className = 'p-3 rounded-md text-sm font-medium bg-red-100 text-red-800 border border-red-200';
+      } else {
+        content.className = 'p-3 rounded-md text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200';
+      }
+      content.textContent = message;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    document.getElementById('btnPrevWeek').onclick = () => loadCalendar(currentWeekOffset - 1);
+    document.getElementById('btnNextWeek').onclick = () => loadCalendar(currentWeekOffset + 1);
+    document.getElementById('btnCurrentWeek').onclick = () => loadCalendar(0);
+    document.getElementById('btnCloseModal').onclick = closeBookingModal;
+    document.getElementById('btnCancelModal').onclick = closeBookingModal;
+    document.getElementById('btnOpenMyBookings').onclick = () => document.getElementById('myBookingsModal').classList.remove('hidden');
+    document.getElementById('btnCloseMyBookingsModal').onclick = () => document.getElementById('myBookingsModal').classList.add('hidden');
+  </script>
+</body>
+</html>
