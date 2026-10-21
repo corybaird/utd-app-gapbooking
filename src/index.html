@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>UTokyo English Conversation Booking System</title>
+  <title>UTokyo Design English Conversation Session Booking</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
   <style>
@@ -16,6 +16,11 @@
     .modal-backdrop {
       background-color: rgba(17, 24, 39, 0.6);
     }
+    @media (max-width: 639px) {
+      .hidden-on-mobile {
+        display: none !important;
+      }
+    }
   </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans min-h-screen">
@@ -24,7 +29,7 @@
   <header class="bg-blue-900 text-white shadow-md">
     <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center space-y-2 md:space-y-0">
       <div>
-        <h1 class="text-xl font-bold tracking-tight">UTokyo English Conversation Session Booking</h1>
+        <h1 class="text-xl font-bold tracking-tight">UTokyo Design English Conversation Session Booking</h1>
         <p class="text-xs text-blue-200">Online 30-minute sessions via Zoom | Mon–Fri (JST)</p>
       </div>
       <div class="flex items-center space-x-3">
@@ -43,8 +48,29 @@
   <!-- Main Container -->
   <main class="max-w-7xl mx-auto px-4 py-6">
 
+    <!-- Active User Booking Chip Banner -->
+    <div id="userBookingStatusBanner" class="hidden bg-indigo-50 border border-indigo-200 rounded-lg p-2.5 mb-4 text-xs text-indigo-900 flex justify-between items-center shadow-sm">
+      <div class="flex items-center space-x-2">
+        <span class="w-2.5 h-2.5 bg-indigo-600 rounded-full inline-block"></span>
+        <span>Viewing calendar with reservations for: <strong id="lblActiveUserEmail"></strong></span>
+      </div>
+      <button id="btnClearActiveUserEmail" class="text-xs text-indigo-700 hover:underline font-semibold">Clear / Switch Email</button>
+    </div>
+
+    <!-- Guidance & Notes Banner -->
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 text-xs text-blue-900 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-1.5 sm:space-y-0 shadow-sm">
+      <div class="flex items-center space-x-2">
+        <span class="bg-blue-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded uppercase">Notice</span>
+        <span>Group sessions (max 3 students) proceed even if only 1 student reserves.</span>
+      </div>
+      <div class="flex items-center space-x-3 text-gray-600 text-[11px]">
+        <span class="flex items-center"><span class="px-1.5 py-0.5 text-[10px] font-bold rounded bg-blue-100 text-blue-800 mr-1">1:1</span> 1 on 1</span>
+        <span class="flex items-center"><span class="px-1.5 py-0.5 text-[10px] font-bold rounded bg-purple-100 text-purple-800 mr-1">Group</span> Max 3</span>
+      </div>
+    </div>
+
     <!-- Calendar Controls -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6 flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0">
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4 flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0">
       <div class="flex items-center space-x-2">
         <button id="btnPrevWeek" class="px-3 py-1.5 border border-gray-300 rounded text-sm font-medium hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed">
           &larr; Previous Week
@@ -52,20 +78,26 @@
         <button id="btnNextWeek" class="px-3 py-1.5 border border-gray-300 rounded text-sm font-medium hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed">
           Next Week &rarr;
         </button>
-        <button id="btnCurrentWeek" class="px-3 py-1.5 text-xs text-blue-700 hover:underline">
-          Jump to Default
+        <button id="btnCurrentWeek" title="Return to standard booking acceptance week" class="px-2.5 py-1.5 text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 font-medium">
+          Standard Booking Week
         </button>
       </div>
 
       <div class="text-center">
-        <span id="calendarDateRange" class="text-base font-semibold text-gray-900">Loading week...</span>
-        <span id="rotationNotice" class="block text-xs text-gray-500">Weekly booking closes Friday 23:29</span>
+        <span id="calendarDateRange" class="text-base font-bold text-gray-900">Loading week...</span>
+        <span id="rotationNotice" class="block text-xs font-bold text-red-600 mt-0.5">Weekly booking closes Friday 23:59 JST</span>
       </div>
 
       <div class="text-xs text-gray-500 flex items-center space-x-3">
         <span class="flex items-center"><span class="w-2.5 h-2.5 bg-green-500 rounded-full inline-block mr-1"></span>Available</span>
         <span class="flex items-center"><span class="w-2.5 h-2.5 bg-gray-300 rounded-full inline-block mr-1"></span>Full / Closed</span>
+        <span class="flex items-center"><span class="w-2.5 h-2.5 bg-indigo-600 rounded-full inline-block mr-1"></span>Your Booking</span>
       </div>
+    </div>
+
+    <!-- Mobile Day Navigation Tabs -->
+    <div id="mobileDayTabs" class="flex sm:hidden overflow-x-auto space-x-1.5 pb-2 mb-3 border-b border-gray-200">
+      <!-- Rendered dynamically on mobile -->
     </div>
 
     <!-- Calendar Grid Loading Spinner -->
@@ -90,7 +122,7 @@
   <div id="bookingModal" class="fixed inset-0 modal-backdrop hidden flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-lg shadow-xl max-w-lg w-full overflow-hidden">
       <div class="bg-blue-900 px-6 py-4 flex justify-between items-center text-white">
-        <h3 class="font-semibold text-lg">Confirm Your Booking</h3>
+        <h3 id="modalTitle" class="font-semibold text-lg">Session Booking</h3>
         <button id="btnCloseModal" class="text-blue-200 hover:text-white">&times;</button>
       </div>
 
@@ -105,46 +137,70 @@
           </div>
         </div>
 
-        <!-- Booking Form -->
-        <form id="bookingForm" class="space-y-3">
-          <div>
-            <label class="block text-xs font-semibold text-gray-700 mb-1">Temporary Student ID (Alphanumeric) *</label>
-            <input type="text" id="inputUserId" required pattern="^[a-zA-Z0-9]+$" placeholder="e.g. 98200123" class="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none">
+        <!-- Step 1: Input Form -->
+        <div id="bookingFormStep">
+          <form id="bookingForm" class="space-y-3">
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 mb-1">Temporary Student ID (Alphanumeric) *</label>
+              <input type="text" id="inputUserId" required pattern="^[a-zA-Z0-9]+$" placeholder="e.g. 98200123" class="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Family Name (Alphabetic) *</label>
+                <input type="text" id="inputFamilyName" required pattern="^[a-zA-Z\s]+$" placeholder="e.g. Todai" class="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Given Name (Alphabetic) *</label>
+                <input type="text" id="inputGivenName" required pattern="^[a-zA-Z\s]+$" placeholder="e.g. Taro" class="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 mb-1">Email Address (UTokyo / Personal) *</label>
+              <input type="email" id="inputEmail" required placeholder="e.g. student@g.ecc.u-tokyo.ac.jp" class="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none">
+            </div>
+
+            <div class="text-xs text-gray-500 pt-1">
+              Rules: Max 1 slot per day across all courses, and max 5 slots per week.
+            </div>
+
+            <div class="pt-3 flex justify-end space-x-2">
+              <button type="button" id="btnCancelModal" class="px-4 py-2 border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-100">Cancel</button>
+              <button type="submit" id="btnReviewBooking" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-semibold">Next: Review Booking</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Step 2: Final Confirmation Review Screen -->
+        <div id="bookingReviewStep" class="hidden space-y-4">
+          <div class="bg-yellow-50 border border-yellow-200 p-3 rounded text-xs text-yellow-900 font-medium">
+            以下の内容で予約を確定します。よろしいですか？<br>
+            <span class="text-[11px] font-normal text-gray-600">Please review and confirm your session details below:</span>
           </div>
 
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-semibold text-gray-700 mb-1">Family Name (Alphabetic) *</label>
-              <input type="text" id="inputFamilyName" required pattern="^[a-zA-Z\s]+$" placeholder="e.g. Todai" class="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none">
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-gray-700 mb-1">Given Name (Alphabetic) *</label>
-              <input type="text" id="inputGivenName" required pattern="^[a-zA-Z\s]+$" placeholder="e.g. Taro" class="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none">
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-gray-700 mb-1">Email Address (UTokyo / Personal) *</label>
-            <input type="email" id="inputEmail" required placeholder="e.g. student@g.ecc.u-tokyo.ac.jp" class="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none">
+          <div class="bg-gray-50 border rounded p-3.5 text-xs space-y-2">
+            <div><span class="font-semibold text-gray-700">Date & Time:</span> <span id="reviewDateTime" class="font-bold text-gray-900 ml-1"></span></div>
+            <div><span class="font-semibold text-gray-700">Course:</span> <span id="reviewCourse" class="font-bold text-gray-900 ml-1"></span></div>
+            <div><span class="font-semibold text-gray-700">Format:</span> <span id="reviewFormat" class="ml-1 text-gray-800"></span></div>
+            <div><span class="font-semibold text-gray-700">Participant:</span> <span id="reviewStudent" class="ml-1 text-gray-800"></span></div>
+            <div><span class="font-semibold text-gray-700">Email:</span> <span id="reviewEmail" class="ml-1 text-gray-800"></span></div>
           </div>
 
           <div id="modalError" class="hidden text-xs text-red-600 bg-red-50 p-2.5 rounded border border-red-200"></div>
 
-          <div class="text-xs text-gray-500 pt-1">
-            Rules: Max 1 slot per day across all courses, and max 5 slots per week.
-          </div>
-
-          <div class="pt-3 flex justify-end space-x-2">
-            <button type="button" id="btnCancelModal" class="px-4 py-2 border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-100">Cancel</button>
-            <button type="submit" id="btnSubmitBooking" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-semibold flex items-center justify-center">
-              <span id="btnSubmitText">Confirm Booking</span>
+          <div class="flex justify-end space-x-2 pt-2">
+            <button type="button" id="btnBackToForm" class="px-4 py-2 border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-100">戻る (Back)</button>
+            <button type="button" id="btnSubmitBookingFinal" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-semibold flex items-center justify-center">
+              <span id="btnSubmitText">予約を確定する (Confirm)</span>
               <svg id="btnSubmitSpinner" class="animate-spin ml-2 h-4 w-4 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
             </button>
           </div>
-        </form>
+        </div>
+
       </div>
     </div>
   </div>
@@ -199,9 +255,16 @@
     let cachedCalendarData = null;
     let selectedSlot = null;
     let pendingCancellation = null;
+    let pendingBookingPayload = null;
+    let selectedMobileDayIndex = 0;
+    let activeUserEmail = localStorage.getItem('utd_student_email') || '';
+    let currentUserBookings = [];
 
     window.onload = function() {
-      loadCalendar(0);
+      updateUserBanner();
+      syncUserBookings(function() {
+        loadCalendar(0);
+      });
 
       const prefillAction = '<?= prefillAction ?>';
       const prefillId = '<?= prefillBookingId ?>';
@@ -211,6 +274,46 @@
         promptCancellation(prefillId, prefillEmail);
       }
     };
+
+    function updateUserBanner() {
+      const banner = document.getElementById('userBookingStatusBanner');
+      const lbl = document.getElementById('lblActiveUserEmail');
+      if (activeUserEmail) {
+        lbl.textContent = activeUserEmail;
+        banner.classList.remove('hidden');
+      } else {
+        banner.classList.add('hidden');
+      }
+    }
+
+    function syncUserBookings(callback) {
+      if (!activeUserEmail) {
+        currentUserBookings = [];
+        if (callback) callback();
+        return;
+      }
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(resJson) {
+            try {
+              const res = JSON.parse(resJson);
+              currentUserBookings = (res.success && res.data) ? res.data : [];
+            } catch (e) {
+              currentUserBookings = [];
+            }
+            if (callback) callback();
+          })
+          .withFailureHandler(function() {
+            currentUserBookings = [];
+            if (callback) callback();
+          })
+          .apiGetUserBookings(activeUserEmail);
+      } else {
+        currentUserBookings = [];
+        if (callback) callback();
+      }
+    }
 
     function loadCalendar(offset) {
       document.getElementById('loadingCalendar').classList.remove('hidden');
@@ -224,6 +327,27 @@
       } else {
         console.warn('Running outside Google Apps Script environment');
       }
+    }
+
+    function selectMobileDay(index) {
+      selectedMobileDayIndex = index;
+      const cards = document.querySelectorAll('.day-card');
+      cards.forEach((card, idx) => {
+        if (idx === index) {
+          card.classList.remove('hidden-on-mobile');
+        } else {
+          card.classList.add('hidden-on-mobile');
+        }
+      });
+
+      const tabBtns = document.querySelectorAll('.mobile-day-tab-btn');
+      tabBtns.forEach((btn, idx) => {
+        if (idx === index) {
+          btn.className = 'mobile-day-tab-btn flex-1 py-1.5 px-2 text-xs font-bold rounded bg-blue-600 text-white text-center whitespace-nowrap shadow-sm';
+        } else {
+          btn.className = 'mobile-day-tab-btn flex-1 py-1.5 px-2 text-xs font-medium rounded bg-white text-gray-700 border border-gray-300 text-center whitespace-nowrap';
+        }
+      });
     }
 
     function renderCalendar(jsonString) {
@@ -241,73 +365,144 @@
       currentWeekOffset = vm.weekOffset;
 
       document.getElementById('calendarDateRange').textContent = vm.currentWeekStart + ' to ' + vm.currentWeekEnd;
+      if (vm.bookingDeadline) {
+        document.getElementById('rotationNotice').textContent = 'Weekly booking closes: ' + vm.bookingDeadline;
+      }
       document.getElementById('btnPrevWeek').disabled = !vm.canNavigatePrev;
       document.getElementById('btnNextWeek').disabled = !vm.canNavigateNext;
+
+      const mobileTabs = document.getElementById('mobileDayTabs');
+      mobileTabs.innerHTML = '';
+      vm.days.forEach((day, dIdx) => {
+        const tabBtn = document.createElement('button');
+        tabBtn.type = 'button';
+        tabBtn.className = (dIdx === selectedMobileDayIndex)
+          ? 'mobile-day-tab-btn flex-1 py-1.5 px-2 text-xs font-bold rounded bg-blue-600 text-white text-center whitespace-nowrap shadow-sm'
+          : 'mobile-day-tab-btn flex-1 py-1.5 px-2 text-xs font-medium rounded bg-white text-gray-700 border border-gray-300 text-center whitespace-nowrap';
+        tabBtn.textContent = `${day.dayOfWeek} ${day.dateString.substring(5)}`;
+        tabBtn.onclick = () => selectMobileDay(dIdx);
+        mobileTabs.appendChild(tabBtn);
+      });
 
       const grid = document.getElementById('calendarDaysGrid');
       grid.innerHTML = '';
 
-      vm.days.forEach(day => {
+      vm.days.forEach((day, dIdx) => {
         const dayCard = document.createElement('div');
-        dayCard.className = 'p-4 ' + (day.isHoliday ? 'bg-gray-100' : 'bg-white');
+        const isHiddenMobile = dIdx !== selectedMobileDayIndex ? 'hidden-on-mobile' : '';
+        dayCard.className = `p-4 day-card ${isHiddenMobile} ` + (day.isHoliday ? 'bg-gray-100' : 'bg-white');
 
         let dayHeaderHtml = `
           <div class="flex items-center justify-between mb-3 border-b pb-2">
             <div>
               <span class="text-base font-bold text-gray-800">${day.dateString} (${day.dayOfWeek})</span>
-              ${day.holidayName ? `<span class="ml-2 text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded">${day.holidayName}</span>` : ''}
+              ${day.holidayName ? `<span class="ml-2 text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded font-medium">${day.holidayName}</span>` : ''}
             </div>
-            ${!day.isBookable && !day.isHoliday ? `<span class="text-xs text-gray-400">Acceptance closed</span>` : ''}
+            ${!day.isBookable && !day.isHoliday ? `<span class="text-xs text-gray-400 font-medium">Acceptance closed</span>` : ''}
           </div>
         `;
 
-        let slotsHtml = '<div class="space-y-3">';
-
-        ['Morning (10:00 - 12:00)', 'Afternoon (15:00 - 17:00)'].forEach((sectionTitle, sIdx) => {
-          const isMorningSection = sIdx === 0;
-          const sectionSlots = vm.timeSlots.filter(s => s.isMorning === isMorningSection);
-
-          slotsHtml += `
-            <div>
-              <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">${sectionTitle}</h4>
-              <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
+        let slotsHtml = '';
+        if (day.isHoliday) {
+          slotsHtml = `
+            <div class="py-8 text-center bg-gray-50 rounded border border-dashed border-gray-300 my-2">
+              <p class="text-sm font-semibold text-gray-700">No sessions available (${day.holidayName || 'Holiday / Non-operational'})</p>
+              <p class="text-xs text-gray-400 mt-1">Closed for student reservations</p>
+            </div>
           `;
+        } else {
+          slotsHtml = '<div class="space-y-3">';
 
-          sectionSlots.forEach(slot => {
+          ['Morning (10:00 - 12:00)', 'Afternoon (15:00 - 17:00)'].forEach((sectionTitle, sIdx) => {
+            const isMorningSection = sIdx === 0;
+            const sectionSlots = vm.timeSlots.filter(s => s.isMorning === isMorningSection);
+
             slotsHtml += `
-              <div class="border rounded p-2 bg-gray-50">
-                <div class="font-bold text-xs text-gray-700 mb-1.5">${slot.time}</div>
-                <div class="space-y-1">
+              <div>
+                <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">${sectionTitle}</h4>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
             `;
 
-            vm.courses.forEach(course => {
-              const availability = day.slots[slot.time][course.id];
-              const isAvailable = availability.isBookable;
-
+            sectionSlots.forEach(slot => {
               slotsHtml += `
-                <button 
-                  type="button" 
-                  class="slot-btn w-full text-left px-2 py-1 text-xs rounded border flex justify-between items-center ${
-                    isAvailable 
-                      ? 'bg-green-50 border-green-300 text-green-900 hover:bg-green-100 cursor-pointer' 
-                      : 'bg-gray-200 border-gray-300 text-gray-400 cursor-not-allowed'
-                  }"
-                  ${!isAvailable ? 'disabled' : ''}
-                  onclick="openBookingModal('${day.dateString}', '${slot.time}', '${course.id}', '${course.name}', '${course.format}')"
-                >
-                  <span class="truncate">${course.name} (${course.theme})</span>
-                  <span class="ml-1 font-semibold">${isAvailable ? availability.remainingCapacity + ' left' : 'Full'}</span>
-                </button>
+                <div class="border rounded p-2 bg-gray-50">
+                  <div class="font-bold text-xs text-gray-700 mb-1.5 flex justify-between">
+                    <span>${slot.time}</span>
+                  </div>
+                  <div class="space-y-1">
               `;
+
+              if (!day.isBookable) {
+                slotsHtml += `
+                  <div class="w-full text-center py-2 text-xs rounded bg-gray-200 border border-gray-300 text-gray-500 font-medium">
+                    No sessions available (Closed)
+                  </div>
+                `;
+              } else {
+                vm.courses.forEach(course => {
+                  const availability = day.slots[slot.time][course.id];
+                  const isAvailable = availability.isBookable;
+
+                  const isUserBooked = currentUserBookings.some(b => 
+                    b.status === 'Booked' && b.bookingDate === day.dateString && b.startTime === slot.time && b.courseId === course.id
+                  );
+
+                  if (isUserBooked) {
+                    slotsHtml += `
+                      <button 
+                        type="button" 
+                        class="slot-btn w-full text-left px-2 py-1 text-xs rounded border border-indigo-400 bg-indigo-50 text-indigo-900 ring-1 ring-indigo-400 flex justify-between items-center cursor-pointer shadow-sm"
+                        onclick="document.getElementById('btnOpenMyBookings').click()"
+                        title="You have booked this slot. Click to view in My Bookings."
+                      >
+                        <span class="truncate font-semibold flex items-center">
+                          <span class="px-1 py-0.2 mr-1 text-[9px] font-bold rounded bg-indigo-200 text-indigo-800">Booked</span>
+                          ${course.name}
+                        </span>
+                        <span class="ml-1 text-[11px] font-bold text-indigo-700">Your Booking</span>
+                      </button>
+                    `;
+                  } else if (isAvailable) {
+                    const badgeClass = course.capacity > 1 ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700';
+                    const badgeText = course.capacity > 1 ? 'Group' : '1:1';
+                    slotsHtml += `
+                      <button 
+                        type="button" 
+                        class="slot-btn w-full text-left px-2 py-1 text-xs rounded border bg-green-50 border-green-300 text-green-900 hover:bg-green-100 cursor-pointer flex justify-between items-center"
+                        onclick="openBookingModal('${day.dateString}', '${slot.time}', '${course.id}', '${course.name}', '${course.format}')"
+                      >
+                        <span class="truncate font-medium flex items-center">
+                          <span class="px-1 py-0.2 mr-1 text-[9px] font-bold rounded ${badgeClass}">${badgeText}</span>
+                          ${course.name}
+                        </span>
+                        <span class="ml-1 font-semibold text-[11px]">${availability.remainingCapacity} left</span>
+                      </button>
+                    `;
+                  } else {
+                    const isClosedReason = availability.reason === 'Closed';
+                    slotsHtml += `
+                      <button 
+                        type="button" 
+                        class="slot-btn w-full text-left px-2 py-1 text-xs rounded border bg-gray-200 border-gray-300 text-gray-400 cursor-not-allowed flex justify-between items-center"
+                        disabled
+                      >
+                        <span class="truncate text-gray-500">${course.name}</span>
+                        <span class="ml-1 font-medium text-[11px]">${isClosedReason ? 'Closed' : 'Full'}</span>
+                      </button>
+                    `;
+                  }
+                });
+              }
+
+              slotsHtml += `</div></div>`;
             });
 
             slotsHtml += `</div></div>`;
           });
 
-          slotsHtml += `</div></div>`;
-        });
+          slotsHtml += '</div>';
+        }
 
-        slotsHtml += '</div>';
         dayCard.innerHTML = dayHeaderHtml + slotsHtml;
         grid.appendChild(dayCard);
       });
@@ -325,6 +520,12 @@
       document.getElementById('modalCourse').textContent = courseName;
       document.getElementById('modalFormat').textContent = format;
 
+      if (activeUserEmail) {
+        document.getElementById('inputEmail').value = activeUserEmail;
+      }
+
+      document.getElementById('bookingFormStep').classList.remove('hidden');
+      document.getElementById('bookingReviewStep').classList.add('hidden');
       document.getElementById('modalError').classList.add('hidden');
       document.getElementById('bookingModal').classList.remove('hidden');
     }
@@ -332,6 +533,7 @@
     function closeBookingModal() {
       document.getElementById('bookingModal').classList.add('hidden');
       selectedSlot = null;
+      pendingBookingPayload = null;
     }
 
     document.getElementById('bookingForm').onsubmit = function(e) {
@@ -343,17 +545,7 @@
       const givenName = document.getElementById('inputGivenName').value.trim();
       const email = document.getElementById('inputEmail').value.trim();
 
-      const btnSubmit = document.getElementById('btnSubmitBooking');
-      const btnText = document.getElementById('btnSubmitText');
-      const btnSpinner = document.getElementById('btnSubmitSpinner');
-      const errorDiv = document.getElementById('modalError');
-
-      errorDiv.classList.add('hidden');
-      btnSubmit.disabled = true;
-      btnSpinner.classList.remove('hidden');
-      btnText.textContent = 'Registering...';
-
-      const payload = {
+      pendingBookingPayload = {
         userId: userId,
         familyName: familyName,
         givenName: givenName,
@@ -363,17 +555,51 @@
         courseId: selectedSlot.courseId
       };
 
+      document.getElementById('reviewDateTime').textContent = `${selectedSlot.date} at ${selectedSlot.time} (JST, 30 min)`;
+      document.getElementById('reviewCourse').textContent = selectedSlot.courseName;
+      document.getElementById('reviewFormat').textContent = selectedSlot.format;
+      document.getElementById('reviewStudent').textContent = `${givenName} ${familyName} (Student ID: ${userId})`;
+      document.getElementById('reviewEmail').textContent = email;
+
+      document.getElementById('modalError').classList.add('hidden');
+      document.getElementById('bookingFormStep').classList.add('hidden');
+      document.getElementById('bookingReviewStep').classList.remove('hidden');
+    };
+
+    document.getElementById('btnBackToForm').onclick = function() {
+      document.getElementById('bookingReviewStep').classList.add('hidden');
+      document.getElementById('bookingFormStep').classList.remove('hidden');
+    };
+
+    document.getElementById('btnSubmitBookingFinal').onclick = function() {
+      if (!pendingBookingPayload) return;
+
+      const btnSubmit = document.getElementById('btnSubmitBookingFinal');
+      const btnText = document.getElementById('btnSubmitText');
+      const btnSpinner = document.getElementById('btnSubmitSpinner');
+      const errorDiv = document.getElementById('modalError');
+
+      errorDiv.classList.add('hidden');
+      btnSubmit.disabled = true;
+      btnSpinner.classList.remove('hidden');
+      btnText.textContent = '確定中 (Registering)...';
+
       google.script.run
         .withSuccessHandler(function(responseJson) {
           btnSubmit.disabled = false;
           btnSpinner.classList.add('hidden');
-          btnText.textContent = 'Confirm Booking';
+          btnText.textContent = '予約を確定する (Confirm)';
 
           const res = JSON.parse(responseJson);
           if (res.success) {
+            const confirmedEmail = pendingBookingPayload.email;
+            localStorage.setItem('utd_student_email', confirmedEmail);
+            activeUserEmail = confirmedEmail;
             closeBookingModal();
-            showBanner(`Booking confirmed successfully! Confirmation email sent to ${email}.`, 'success');
-            loadCalendar(currentWeekOffset);
+            showBanner(`Booking confirmed successfully! Confirmation email sent to ${confirmedEmail}.`, 'success');
+            syncUserBookings(function() {
+              loadCalendar(currentWeekOffset);
+            });
           } else {
             errorDiv.textContent = res.error || 'Failed to complete booking.';
             errorDiv.classList.remove('hidden');
@@ -382,11 +608,11 @@
         .withFailureHandler(function(err) {
           btnSubmit.disabled = false;
           btnSpinner.classList.add('hidden');
-          btnText.textContent = 'Confirm Booking';
+          btnText.textContent = '予約を確定する (Confirm)';
           errorDiv.textContent = 'Server error: ' + (err.message || err);
           errorDiv.classList.remove('hidden');
         })
-        .apiBookSlot(JSON.stringify(payload));
+        .apiBookSlot(JSON.stringify(pendingBookingPayload));
     };
 
     function executeCancellation(bookingId, email) {
@@ -396,7 +622,9 @@
           const res = JSON.parse(resJson);
           if (res.success) {
             showBanner('Booking cancelled successfully. Confirmation notice dispatched.', 'success');
-            loadCalendar(currentWeekOffset);
+            syncUserBookings(function() {
+              loadCalendar(currentWeekOffset);
+            });
           } else {
             showBanner('Cancellation failed: ' + res.error, 'error');
           }
@@ -423,6 +651,10 @@
       const email = document.getElementById('inputSearchEmail').value.trim();
       if (!email) return;
 
+      localStorage.setItem('utd_student_email', email);
+      activeUserEmail = email;
+      updateUserBanner();
+
       const container = document.getElementById('userBookingsList');
       container.innerHTML = '<p class="text-xs text-gray-500 text-center py-2">Searching...</p>';
 
@@ -431,8 +663,13 @@
           const res = JSON.parse(resJson);
           if (!res.success || !res.data || res.data.length === 0) {
             container.innerHTML = '<p class="text-xs text-gray-500 text-center py-2">No bookings found for this email.</p>';
+            currentUserBookings = [];
+            loadCalendar(currentWeekOffset);
             return;
           }
+
+          currentUserBookings = res.data;
+          loadCalendar(currentWeekOffset);
 
           container.innerHTML = '';
           res.data.forEach(b => {
@@ -462,6 +699,15 @@
         .apiGetUserBookings(email);
     };
 
+    document.getElementById('btnClearActiveUserEmail').onclick = function() {
+      localStorage.removeItem('utd_student_email');
+      activeUserEmail = '';
+      currentUserBookings = [];
+      updateUserBanner();
+      loadCalendar(currentWeekOffset);
+      showBanner('Personalized calendar cleared.', 'info');
+    };
+
     function showBanner(message, type) {
       const banner = document.getElementById('alertBanner');
       const content = document.getElementById('alertBannerContent');
@@ -483,7 +729,13 @@
     document.getElementById('btnCurrentWeek').onclick = () => loadCalendar(0);
     document.getElementById('btnCloseModal').onclick = closeBookingModal;
     document.getElementById('btnCancelModal').onclick = closeBookingModal;
-    document.getElementById('btnOpenMyBookings').onclick = () => document.getElementById('myBookingsModal').classList.remove('hidden');
+    document.getElementById('btnOpenMyBookings').onclick = function() {
+      if (activeUserEmail) {
+        document.getElementById('inputSearchEmail').value = activeUserEmail;
+        document.getElementById('btnSearchBookings').click();
+      }
+      document.getElementById('myBookingsModal').classList.remove('hidden');
+    };
     document.getElementById('btnCloseMyBookingsModal').onclick = () => document.getElementById('myBookingsModal').classList.add('hidden');
     document.getElementById('btnCloseConfirmCancelModal').onclick = closeCancelConfirmationModal;
     document.getElementById('btnDismissCancelModal').onclick = closeCancelConfirmationModal;
