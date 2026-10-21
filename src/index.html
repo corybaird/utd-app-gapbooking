@@ -4,17 +4,68 @@
   <meta charset="UTF-8">
   <title>UTokyo Design English Conversation Session Booking</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@600;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
   <style>
+    :root {
+      /* UTokyo Primary Colours */
+      --utokyo-blue: #0b8bee;
+      --utokyo-yellow: #ffcd00;
+      --utokyo-black: #000000;
+      --utokyo-white: #ffffff;
+
+      /* UTokyo Blue Tonal System */
+      --utokyo-blue-800: #04385f;
+      --utokyo-blue-600: #096fbe;
+      --utokyo-blue-400: #3ca2f1;
+      --utokyo-blue-200: #9dd1f8;
+      --utokyo-blue-150: #b6dcfa;
+      --utokyo-blue-050: #e7f3fd;
+
+      /* UTokyo Yellow Tonal System */
+      --utokyo-yellow-800: #705a00;
+      --utokyo-yellow-600: #cca400;
+      --utokyo-yellow-400: #ffd733;
+      --utokyo-yellow-200: #ffeb99;
+      --utokyo-yellow-150: #fff0b2;
+      --utokyo-yellow-050: #fffae5;
+
+      /* UTokyo Neutral Tonal System */
+      --utokyo-black-800: #333333;
+      --utokyo-black-600: #666666;
+      --utokyo-black-400: #999999;
+      --utokyo-black-200: #cccccc;
+      --utokyo-black-150: #d9d9d9;
+      --utokyo-black-050: #f2f2f2;
+
+      /* UTokyo Supplemental Green */
+      --utokyo-green-400: #329e24;
+      --utokyo-green-200: #75ce6a;
+      --utokyo-green-150: #86da7c;
+      --utokyo-green-050: #a8f29e;
+    }
+
+    body {
+      font-family: "Noto Sans JP", "Source Sans 3", Arial, -apple-system, sans-serif;
+      color: var(--utokyo-black-800);
+      background-color: #f7f9fb;
+    }
+
+    .ut-serif {
+      font-family: Georgia, "Noto Serif JP", serif;
+    }
+
     .slot-btn {
       transition: all 0.15s ease-in-out;
     }
     .slot-btn:hover:not(:disabled) {
       transform: translateY(-1px);
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 8px -1px rgba(4, 56, 95, 0.12);
     }
     .modal-backdrop {
-      background-color: rgba(17, 24, 39, 0.6);
+      background-color: rgba(4, 56, 95, 0.65);
     }
     @media (max-width: 639px) {
       .hidden-on-mobile {
@@ -23,17 +74,17 @@
     }
   </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans min-h-screen">
+<body class="min-h-screen">
 
   <!-- Header -->
-  <header class="bg-blue-900 text-white shadow-md">
+  <header style="background-color: var(--utokyo-blue-800); border-bottom: 3.5px solid var(--utokyo-yellow);" class="text-white shadow-md">
     <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center space-y-2 md:space-y-0">
       <div>
-        <h1 class="text-xl font-bold tracking-tight">UTokyo Design English Conversation Session Booking</h1>
-        <p class="text-xs text-blue-200">Online 30-minute sessions via Zoom | Mon–Fri (JST)</p>
+        <h1 class="ut-serif text-xl md:text-2xl font-bold tracking-tight text-white">UTokyo Design English Conversation Session Booking</h1>
+        <p style="color: var(--utokyo-blue-150);" class="text-xs">Online 30-minute sessions via Zoom | Mon–Fri (JST)</p>
       </div>
       <div class="flex items-center space-x-3">
-        <button id="btnOpenMyBookings" class="text-xs bg-blue-800 hover:bg-blue-700 text-white font-medium py-2 px-3 rounded border border-blue-600 transition">
+        <button id="btnOpenMyBookings" style="background-color: var(--utokyo-blue-600); border: 1px solid var(--utokyo-blue-400);" class="hover:opacity-90 text-white font-medium py-2 px-3.5 rounded text-xs transition shadow-sm">
           My Bookings & Cancellation
         </button>
       </div>
@@ -49,60 +100,60 @@
   <main class="max-w-7xl mx-auto px-4 py-6">
 
     <!-- Active User Booking Chip Banner -->
-    <div id="userBookingStatusBanner" class="hidden bg-indigo-50 border border-indigo-200 rounded-lg p-2.5 mb-4 text-xs text-indigo-900 flex justify-between items-center shadow-sm">
+    <div id="userBookingStatusBanner" style="background-color: var(--utokyo-blue-050); border: 1px solid var(--utokyo-blue-200); color: var(--utokyo-blue-800);" class="hidden rounded-lg p-2.5 mb-4 text-xs flex justify-between items-center shadow-sm">
       <div class="flex items-center space-x-2">
-        <span class="w-2.5 h-2.5 bg-indigo-600 rounded-full inline-block"></span>
+        <span style="background-color: var(--utokyo-blue-600);" class="w-2.5 h-2.5 rounded-full inline-block"></span>
         <span>Viewing calendar with reservations for: <strong id="lblActiveUserEmail"></strong></span>
       </div>
-      <button id="btnClearActiveUserEmail" class="text-xs text-indigo-700 hover:underline font-semibold">Clear / Switch Email</button>
+      <button id="btnClearActiveUserEmail" style="color: var(--utokyo-blue-600);" class="text-xs hover:underline font-semibold">Clear / Switch Email</button>
     </div>
 
     <!-- Guidance & Notes Banner -->
-    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 text-xs text-blue-900 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-1.5 sm:space-y-0 shadow-sm">
+    <div style="background-color: var(--utokyo-yellow-050); border: 1px solid var(--utokyo-yellow-200); border-left: 4px solid var(--utokyo-yellow); color: var(--utokyo-yellow-800);" class="rounded-lg p-3 mb-4 text-xs flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-1.5 sm:space-y-0 shadow-sm">
       <div class="flex items-center space-x-2">
-        <span class="bg-blue-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded uppercase">Notice</span>
+        <span style="background-color: var(--utokyo-yellow-800); color: var(--utokyo-white);" class="text-[10px] font-bold px-1.5 py-0.5 rounded uppercase">Notice</span>
         <span>Group sessions (max 3 students) proceed even if only 1 student reserves.</span>
       </div>
-      <div class="flex items-center space-x-3 text-gray-600 text-[11px]">
-        <span class="flex items-center"><span class="px-1.5 py-0.5 text-[10px] font-bold rounded bg-blue-100 text-blue-800 mr-1">1:1</span> 1 on 1</span>
-        <span class="flex items-center"><span class="px-1.5 py-0.5 text-[10px] font-bold rounded bg-purple-100 text-purple-800 mr-1">Group</span> Max 3</span>
+      <div class="flex items-center space-x-3 text-[11px]">
+        <span class="flex items-center"><span style="background-color: var(--utokyo-blue-150); color: var(--utokyo-blue-800);" class="px-1.5 py-0.5 text-[10px] font-bold rounded mr-1">1:1</span> 1 on 1</span>
+        <span class="flex items-center"><span style="background-color: var(--utokyo-yellow-200); color: var(--utokyo-yellow-800);" class="px-1.5 py-0.5 text-[10px] font-bold rounded mr-1">Group</span> Max 3</span>
       </div>
     </div>
 
     <!-- Calendar Controls -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4 flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0">
+    <div style="border-color: var(--utokyo-black-150);" class="bg-white rounded-lg shadow-sm border p-4 mb-4 flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0">
       <div class="flex items-center space-x-2">
-        <button id="btnPrevWeek" class="px-3 py-1.5 border border-gray-300 rounded text-sm font-medium hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed">
+        <button id="btnPrevWeek" style="border-color: var(--utokyo-black-200);" class="px-3 py-1.5 border rounded text-sm font-medium hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed">
           &larr; Previous Week
         </button>
-        <button id="btnNextWeek" class="px-3 py-1.5 border border-gray-300 rounded text-sm font-medium hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed">
+        <button id="btnNextWeek" style="border-color: var(--utokyo-black-200);" class="px-3 py-1.5 border rounded text-sm font-medium hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed">
           Next Week &rarr;
         </button>
-        <button id="btnCurrentWeek" title="Return to standard booking acceptance week" class="px-2.5 py-1.5 text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 font-medium">
+        <button id="btnCurrentWeek" title="Return to standard booking acceptance week" style="background-color: var(--utokyo-blue-050); border: 1px solid var(--utokyo-blue-200); color: var(--utokyo-blue-800);" class="px-2.5 py-1.5 text-xs rounded hover:opacity-90 font-medium">
           Standard Booking Week
         </button>
       </div>
 
       <div class="text-center">
-        <span id="calendarDateRange" class="text-base font-bold text-gray-900">Loading week...</span>
-        <span id="rotationNotice" class="block text-xs font-bold text-red-600 mt-0.5">Weekly booking closes Friday 23:59 JST</span>
+        <span id="calendarDateRange" class="ut-serif text-base font-bold text-gray-900">Loading week...</span>
+        <span id="rotationNotice" style="color: #c53030;" class="block text-xs font-bold mt-0.5">Weekly booking closes Friday 23:59 JST</span>
       </div>
 
       <div class="text-xs text-gray-500 flex items-center space-x-3">
-        <span class="flex items-center"><span class="w-2.5 h-2.5 bg-green-500 rounded-full inline-block mr-1"></span>Available</span>
-        <span class="flex items-center"><span class="w-2.5 h-2.5 bg-gray-300 rounded-full inline-block mr-1"></span>Full / Closed</span>
-        <span class="flex items-center"><span class="w-2.5 h-2.5 bg-indigo-600 rounded-full inline-block mr-1"></span>Your Booking</span>
+        <span class="flex items-center"><span style="background-color: var(--utokyo-green-400);" class="w-2.5 h-2.5 rounded-full inline-block mr-1"></span>Available</span>
+        <span class="flex items-center"><span style="background-color: var(--utokyo-black-200);" class="w-2.5 h-2.5 rounded-full inline-block mr-1"></span>Full / Closed</span>
+        <span class="flex items-center"><span style="background-color: var(--utokyo-blue-600);" class="w-2.5 h-2.5 rounded-full inline-block mr-1"></span>Your Booking</span>
       </div>
     </div>
 
     <!-- Mobile Day Navigation Tabs -->
-    <div id="mobileDayTabs" class="flex sm:hidden overflow-x-auto space-x-1.5 pb-2 mb-3 border-b border-gray-200">
+    <div id="mobileDayTabs" style="border-color: var(--utokyo-black-150);" class="flex sm:hidden overflow-x-auto space-x-1.5 pb-2 mb-3 border-b">
       <!-- Rendered dynamically on mobile -->
     </div>
 
     <!-- Calendar Grid Loading Spinner -->
     <div id="loadingCalendar" class="py-16 text-center">
-      <svg class="animate-spin h-8 w-8 text-blue-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <svg style="color: var(--utokyo-blue-600);" class="animate-spin h-8 w-8 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
       </svg>
@@ -110,7 +161,7 @@
     </div>
 
     <!-- Calendar Grid Container -->
-    <div id="calendarContainer" class="hidden overflow-x-auto bg-white rounded-lg shadow-sm border border-gray-200">
+    <div id="calendarContainer" style="border-color: var(--utokyo-black-150);" class="hidden overflow-x-auto bg-white rounded-lg shadow-sm border">
       <div id="calendarDaysGrid" class="divide-y divide-gray-200">
         <!-- Rendered dynamically -->
       </div>
@@ -121,22 +172,19 @@
   <!-- Booking Modal -->
   <div id="bookingModal" class="fixed inset-0 modal-backdrop hidden flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-lg shadow-xl max-w-lg w-full overflow-hidden">
-      <div class="bg-blue-900 px-6 py-4 flex justify-between items-center text-white">
-        <h3 id="modalTitle" class="font-semibold text-lg">Session Booking</h3>
-        <button id="btnCloseModal" class="text-blue-200 hover:text-white">&times;</button>
+      <div style="background-color: var(--utokyo-blue-800); border-bottom: 2.5px solid var(--utokyo-yellow);" class="px-6 py-4 flex justify-between items-center text-white">
+        <h3 id="modalTitle" class="ut-serif font-semibold text-lg">Session Booking</h3>
+        <button id="btnCloseModal" style="color: var(--utokyo-blue-150);" class="hover:text-white">&times;</button>
       </div>
 
       <div class="p-6">
         <!-- Slot Details Summary Card -->
-        <div class="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4 text-xs">
+        <div style="background-color: var(--utokyo-blue-050); border: 1px solid var(--utokyo-blue-200);" class="rounded-md p-3 mb-4 text-xs">
           <div class="grid grid-cols-2 gap-2 text-gray-700">
             <div><span class="font-semibold text-gray-900">Date:</span> <span id="modalDate">-</span></div>
             <div><span class="font-semibold text-gray-900">Time:</span> <span id="modalTime">-</span></div>
             <div><span class="font-semibold text-gray-900">Course:</span> <span id="modalCourse">-</span></div>
             <div><span class="font-semibold text-gray-900">Format:</span> <span id="modalFormat">-</span></div>
-          </div>
-        </div>
-
         <!-- Step 1: Input Form -->
         <div id="bookingFormStep">
           <form id="bookingForm" class="space-y-3">
@@ -166,22 +214,22 @@
             </div>
 
             <div class="pt-3 flex justify-end space-x-2">
-              <button type="button" id="btnCancelModal" class="px-4 py-2 border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-100">Cancel</button>
-              <button type="submit" id="btnReviewBooking" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-semibold">Next: Review Booking</button>
+              <button type="button" id="btnCancelModal" style="border-color: var(--utokyo-black-200); color: var(--utokyo-black-800);" class="px-4 py-2 border rounded text-sm hover:bg-gray-100">Cancel</button>
+              <button type="submit" id="btnReviewBooking" style="background-color: var(--utokyo-blue-600); color: var(--utokyo-white);" class="hover:opacity-90 px-5 py-2 rounded text-sm font-semibold shadow-sm">Next: Review Booking</button>
             </div>
           </form>
         </div>
 
         <!-- Step 2: Final Confirmation Review Screen -->
         <div id="bookingReviewStep" class="hidden space-y-4">
-          <div class="bg-yellow-50 border border-yellow-200 p-3 rounded text-xs text-yellow-900 font-medium">
+          <div style="background-color: var(--utokyo-yellow-050); border: 1px solid var(--utokyo-yellow-200); border-left: 4px solid var(--utokyo-yellow); color: var(--utokyo-yellow-800);" class="p-3 rounded text-xs font-medium">
             以下の内容で予約を確定します。よろしいですか？<br>
-            <span class="text-[11px] font-normal text-gray-600">Please review and confirm your session details below:</span>
+            <span class="text-[11px] font-normal" style="color: var(--utokyo-black-600);">Please review and confirm your session details below:</span>
           </div>
 
-          <div class="bg-gray-50 border rounded p-3.5 text-xs space-y-2">
-            <div><span class="font-semibold text-gray-700">Date & Time:</span> <span id="reviewDateTime" class="font-bold text-gray-900 ml-1"></span></div>
-            <div><span class="font-semibold text-gray-700">Course:</span> <span id="reviewCourse" class="font-bold text-gray-900 ml-1"></span></div>
+          <div style="background-color: var(--utokyo-blue-050); border: 1px solid var(--utokyo-blue-200);" class="rounded p-3.5 text-xs space-y-2">
+            <div><span class="font-semibold text-gray-700">Date & Time:</span> <span id="reviewDateTime" class="font-bold ml-1" style="color: var(--utokyo-blue-800);"></span></div>
+            <div><span class="font-semibold text-gray-700">Course:</span> <span id="reviewCourse" class="font-bold ml-1 text-gray-900"></span></div>
             <div><span class="font-semibold text-gray-700">Format:</span> <span id="reviewFormat" class="ml-1 text-gray-800"></span></div>
             <div><span class="font-semibold text-gray-700">Participant:</span> <span id="reviewStudent" class="ml-1 text-gray-800"></span></div>
             <div><span class="font-semibold text-gray-700">Email:</span> <span id="reviewEmail" class="ml-1 text-gray-800"></span></div>
@@ -190,8 +238,8 @@
           <div id="modalError" class="hidden text-xs text-red-600 bg-red-50 p-2.5 rounded border border-red-200"></div>
 
           <div class="flex justify-end space-x-2 pt-2">
-            <button type="button" id="btnBackToForm" class="px-4 py-2 border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-100">戻る (Back)</button>
-            <button type="button" id="btnSubmitBookingFinal" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-semibold flex items-center justify-center">
+            <button type="button" id="btnBackToForm" style="border-color: var(--utokyo-black-200); color: var(--utokyo-black-800);" class="px-4 py-2 border rounded text-sm hover:bg-gray-100">戻る (Back)</button>
+            <button type="button" id="btnSubmitBookingFinal" style="background-color: var(--utokyo-blue-600); color: var(--utokyo-white);" class="hover:opacity-90 px-5 py-2 rounded text-sm font-semibold flex items-center justify-center shadow-sm">
               <span id="btnSubmitText">予約を確定する (Confirm)</span>
               <svg id="btnSubmitSpinner" class="animate-spin ml-2 h-4 w-4 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -208,16 +256,16 @@
   <!-- Cancellation & My Bookings Modal -->
   <div id="myBookingsModal" class="fixed inset-0 modal-backdrop hidden flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-lg shadow-xl max-w-lg w-full overflow-hidden">
-      <div class="bg-gray-800 px-6 py-4 flex justify-between items-center text-white">
-        <h3 class="font-semibold text-lg">My Bookings</h3>
-        <button id="btnCloseMyBookingsModal" class="text-gray-300 hover:text-white">&times;</button>
+      <div style="background-color: var(--utokyo-blue-800); border-bottom: 2.5px solid var(--utokyo-yellow);" class="px-6 py-4 flex justify-between items-center text-white">
+        <h3 class="ut-serif font-semibold text-lg">My Bookings</h3>
+        <button id="btnCloseMyBookingsModal" style="color: var(--utokyo-blue-150);" class="hover:text-white">&times;</button>
       </div>
       <div class="p-6">
         <div class="mb-4">
           <label class="block text-xs font-semibold text-gray-700 mb-1">Enter your registered email address</label>
           <div class="flex space-x-2">
-            <input type="email" id="inputSearchEmail" placeholder="student@g.ecc.u-tokyo.ac.jp" class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none">
-            <button id="btnSearchBookings" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded">Search</button>
+            <input type="email" id="inputSearchEmail" placeholder="student@g.ecc.u-tokyo.ac.jp" style="border-color: var(--utokyo-black-200);" class="flex-1 px-3 py-2 text-sm border rounded focus:outline-none">
+            <button id="btnSearchBookings" style="background-color: var(--utokyo-blue-600); color: var(--utokyo-white);" class="hover:opacity-90 px-4 py-2 text-sm font-medium rounded shadow-sm">Search</button>
           </div>
         </div>
 
@@ -231,8 +279,8 @@
   <!-- Direct Cancel Confirmation Modal -->
   <div id="confirmCancelModal" class="fixed inset-0 modal-backdrop hidden flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-lg shadow-xl max-w-md w-full overflow-hidden">
-      <div class="bg-red-800 px-6 py-4 flex justify-between items-center text-white">
-        <h3 class="font-semibold text-lg">Confirm Cancellation</h3>
+      <div style="background-color: #991b1b; border-bottom: 2.5px solid var(--utokyo-yellow);" class="px-6 py-4 flex justify-between items-center text-white">
+        <h3 class="ut-serif font-semibold text-lg">Confirm Cancellation</h3>
         <button id="btnCloseConfirmCancelModal" class="text-red-200 hover:text-white">&times;</button>
       </div>
       <div class="p-6 space-y-4">
@@ -343,9 +391,14 @@
       const tabBtns = document.querySelectorAll('.mobile-day-tab-btn');
       tabBtns.forEach((btn, idx) => {
         if (idx === index) {
-          btn.className = 'mobile-day-tab-btn flex-1 py-1.5 px-2 text-xs font-bold rounded bg-blue-600 text-white text-center whitespace-nowrap shadow-sm';
+          btn.className = 'mobile-day-tab-btn flex-1 py-1.5 px-2 text-xs font-bold rounded text-white text-center whitespace-nowrap shadow-sm';
+          btn.style.backgroundColor = 'var(--utokyo-blue-800)';
+          btn.style.border = '1px solid var(--utokyo-blue-800)';
         } else {
-          btn.className = 'mobile-day-tab-btn flex-1 py-1.5 px-2 text-xs font-medium rounded bg-white text-gray-700 border border-gray-300 text-center whitespace-nowrap';
+          btn.className = 'mobile-day-tab-btn flex-1 py-1.5 px-2 text-xs font-medium rounded text-center whitespace-nowrap';
+          btn.style.backgroundColor = 'var(--utokyo-white)';
+          btn.style.border = '1px solid var(--utokyo-black-200)';
+          btn.style.color = 'var(--utokyo-black-800)';
         }
       });
     }
@@ -376,9 +429,16 @@
       vm.days.forEach((day, dIdx) => {
         const tabBtn = document.createElement('button');
         tabBtn.type = 'button';
-        tabBtn.className = (dIdx === selectedMobileDayIndex)
-          ? 'mobile-day-tab-btn flex-1 py-1.5 px-2 text-xs font-bold rounded bg-blue-600 text-white text-center whitespace-nowrap shadow-sm'
-          : 'mobile-day-tab-btn flex-1 py-1.5 px-2 text-xs font-medium rounded bg-white text-gray-700 border border-gray-300 text-center whitespace-nowrap';
+        if (dIdx === selectedMobileDayIndex) {
+          tabBtn.className = 'mobile-day-tab-btn flex-1 py-1.5 px-2 text-xs font-bold rounded text-white text-center whitespace-nowrap shadow-sm';
+          tabBtn.style.backgroundColor = 'var(--utokyo-blue-800)';
+          tabBtn.style.border = '1px solid var(--utokyo-blue-800)';
+        } else {
+          tabBtn.className = 'mobile-day-tab-btn flex-1 py-1.5 px-2 text-xs font-medium rounded text-center whitespace-nowrap';
+          tabBtn.style.backgroundColor = 'var(--utokyo-white)';
+          tabBtn.style.border = '1px solid var(--utokyo-black-200)';
+          tabBtn.style.color = 'var(--utokyo-black-800)';
+        }
         tabBtn.textContent = `${day.dayOfWeek} ${day.dateString.substring(5)}`;
         tabBtn.onclick = () => selectMobileDay(dIdx);
         mobileTabs.appendChild(tabBtn);
@@ -393,21 +453,21 @@
         dayCard.className = `p-4 day-card ${isHiddenMobile} ` + (day.isHoliday ? 'bg-gray-100' : 'bg-white');
 
         let dayHeaderHtml = `
-          <div class="flex items-center justify-between mb-3 border-b pb-2">
+          <div class="flex items-center justify-between mb-3 border-b pb-2" style="border-color: var(--utokyo-black-150);">
             <div>
-              <span class="text-base font-bold text-gray-800">${day.dateString} (${day.dayOfWeek})</span>
-              ${day.holidayName ? `<span class="ml-2 text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded font-medium">${day.holidayName}</span>` : ''}
+              <span class="ut-serif text-base font-bold" style="color: var(--utokyo-blue-800);">${day.dateString} (${day.dayOfWeek})</span>
+              ${day.holidayName ? `<span class="ml-2 text-xs px-2 py-0.5 rounded font-medium" style="background-color: var(--utokyo-yellow-150); color: var(--utokyo-yellow-800); border: 1px solid var(--utokyo-yellow-400);">${day.holidayName}</span>` : ''}
             </div>
-            ${!day.isBookable && !day.isHoliday ? `<span class="text-xs text-gray-400 font-medium">Acceptance closed</span>` : ''}
+            ${!day.isBookable && !day.isHoliday ? `<span class="text-xs font-medium" style="color: var(--utokyo-black-400);">Acceptance closed</span>` : ''}
           </div>
         `;
 
         let slotsHtml = '';
         if (day.isHoliday) {
           slotsHtml = `
-            <div class="py-8 text-center bg-gray-50 rounded border border-dashed border-gray-300 my-2">
-              <p class="text-sm font-semibold text-gray-700">No sessions available (${day.holidayName || 'Holiday / Non-operational'})</p>
-              <p class="text-xs text-gray-400 mt-1">Closed for student reservations</p>
+            <div class="py-8 text-center rounded border border-dashed my-2" style="background-color: var(--utokyo-black-050); border-color: var(--utokyo-black-200);">
+              <p class="text-sm font-semibold" style="color: var(--utokyo-black-800);">No sessions available (${day.holidayName || 'Holiday / Non-operational'})</p>
+              <p class="text-xs mt-1" style="color: var(--utokyo-black-400);">Closed for student reservations</p>
             </div>
           `;
         } else {
@@ -419,14 +479,14 @@
 
             slotsHtml += `
               <div>
-                <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">${sectionTitle}</h4>
+                <h4 class="text-xs font-bold uppercase tracking-wider mb-2" style="color: var(--utokyo-blue-800);">${sectionTitle}</h4>
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
             `;
 
             sectionSlots.forEach(slot => {
               slotsHtml += `
-                <div class="border rounded p-2 bg-gray-50">
-                  <div class="font-bold text-xs text-gray-700 mb-1.5 flex justify-between">
+                <div class="border rounded p-2" style="background-color: #fafbfc; border-color: var(--utokyo-black-150);">
+                  <div class="font-bold text-xs mb-1.5 flex justify-between" style="color: var(--utokyo-blue-800);">
                     <span>${slot.time}</span>
                   </div>
                   <div class="space-y-1">
@@ -434,7 +494,7 @@
 
               if (!day.isBookable) {
                 slotsHtml += `
-                  <div class="w-full text-center py-2 text-xs rounded bg-gray-200 border border-gray-300 text-gray-500 font-medium">
+                  <div class="w-full text-center py-2 text-xs rounded border font-medium" style="background-color: var(--utokyo-black-050); border-color: var(--utokyo-black-200); color: var(--utokyo-black-400);">
                     No sessions available (Closed)
                   </div>
                 `;
@@ -451,31 +511,34 @@
                     slotsHtml += `
                       <button 
                         type="button" 
-                        class="slot-btn w-full text-left px-2 py-1 text-xs rounded border border-indigo-400 bg-indigo-50 text-indigo-900 ring-1 ring-indigo-400 flex justify-between items-center cursor-pointer shadow-sm"
+                        class="slot-btn w-full text-left px-2 py-1.5 text-xs rounded border flex justify-between items-center cursor-pointer shadow-sm"
+                        style="border: 1px solid var(--utokyo-blue-400); background-color: var(--utokyo-blue-050); color: var(--utokyo-blue-800); box-shadow: 0 0 0 1px var(--utokyo-blue-400);"
                         onclick="document.getElementById('btnOpenMyBookings').click()"
                         title="You have booked this slot. Click to view in My Bookings."
                       >
                         <span class="truncate font-semibold flex items-center">
-                          <span class="px-1 py-0.2 mr-1 text-[9px] font-bold rounded bg-indigo-200 text-indigo-800">Booked</span>
+                          <span class="px-1 py-0.2 mr-1 text-[9px] font-bold rounded" style="background-color: var(--utokyo-blue-600); color: var(--utokyo-white);">Booked</span>
                           ${course.name}
                         </span>
-                        <span class="ml-1 text-[11px] font-bold text-indigo-700">Your Booking</span>
+                        <span class="ml-1 text-[11px] font-bold" style="color: var(--utokyo-blue-800);">Your Booking</span>
                       </button>
                     `;
                   } else if (isAvailable) {
-                    const badgeClass = course.capacity > 1 ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700';
+                    const badgeBg = course.capacity > 1 ? 'var(--utokyo-yellow-150)' : 'var(--utokyo-blue-150)';
+                    const badgeColor = course.capacity > 1 ? 'var(--utokyo-yellow-800)' : 'var(--utokyo-blue-800)';
                     const badgeText = course.capacity > 1 ? 'Group' : '1:1';
                     slotsHtml += `
                       <button 
                         type="button" 
-                        class="slot-btn w-full text-left px-2 py-1 text-xs rounded border bg-green-50 border-green-300 text-green-900 hover:bg-green-100 cursor-pointer flex justify-between items-center"
+                        class="slot-btn w-full text-left px-2 py-1.5 text-xs rounded border flex justify-between items-center cursor-pointer transition"
+                        style="background-color: #f4faf2; border: 1px solid var(--utokyo-green-200); color: var(--utokyo-black-800);"
                         onclick="openBookingModal('${day.dateString}', '${slot.time}', '${course.id}', '${course.name}', '${course.format}')"
                       >
                         <span class="truncate font-medium flex items-center">
-                          <span class="px-1 py-0.2 mr-1 text-[9px] font-bold rounded ${badgeClass}">${badgeText}</span>
+                          <span class="px-1 py-0.2 mr-1 text-[9px] font-bold rounded" style="background-color: ${badgeBg}; color: ${badgeColor};">${badgeText}</span>
                           ${course.name}
                         </span>
-                        <span class="ml-1 font-semibold text-[11px]">${availability.remainingCapacity} left</span>
+                        <span class="ml-1 font-bold text-[11px]" style="color: var(--utokyo-green-400);">${availability.remainingCapacity} left</span>
                       </button>
                     `;
                   } else {
@@ -483,10 +546,11 @@
                     slotsHtml += `
                       <button 
                         type="button" 
-                        class="slot-btn w-full text-left px-2 py-1 text-xs rounded border bg-gray-200 border-gray-300 text-gray-400 cursor-not-allowed flex justify-between items-center"
+                        class="slot-btn w-full text-left px-2 py-1.5 text-xs rounded border cursor-not-allowed flex justify-between items-center"
+                        style="background-color: var(--utokyo-black-050); border: 1px solid var(--utokyo-black-200); color: var(--utokyo-black-400);"
                         disabled
                       >
-                        <span class="truncate text-gray-500">${course.name}</span>
+                        <span class="truncate" style="color: var(--utokyo-black-400);">${course.name}</span>
                         <span class="ml-1 font-medium text-[11px]">${isClosedReason ? 'Closed' : 'Full'}</span>
                       </button>
                     `;
@@ -680,7 +744,7 @@
               <div>
                 <div class="flex items-center space-x-2">
                   <span class="font-semibold text-gray-800">${b.bookingDate} at ${b.startTime}</span>
-                  <span class="px-1.5 py-0.5 rounded text-xs font-semibold ${isCancelled ? 'bg-gray-200 text-gray-600' : 'bg-green-100 text-green-800'}">${b.status}</span>
+                  <span class="px-1.5 py-0.5 rounded text-xs font-semibold" style="${isCancelled ? 'background-color: var(--utokyo-black-050); color: var(--utokyo-black-600); border: 1px solid var(--utokyo-black-200);' : 'background-color: var(--utokyo-blue-050); color: var(--utokyo-blue-800); border: 1px solid var(--utokyo-blue-200);'}">${b.status}</span>
                 </div>
                 <div class="text-gray-500 mt-1">${b.courseName} | ID: ${b.bookingId.substring(0, 8)}...</div>
               </div>
