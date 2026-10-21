@@ -7,7 +7,7 @@ function doGet(e: GoogleAppsScript.Events.DoGet): GoogleAppsScript.HTML.HtmlOutp
   template.prefillEmail = e && e.parameter ? e.parameter.email : '';
 
   return template.evaluate()
-    .setTitle('UTokyo English Conversation Booking System')
+    .setTitle('UTokyo Design English Conversation Session Booking')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
@@ -61,7 +61,7 @@ function setupDailyTrigger(): void {
 
 function onOpen(): void {
   SpreadsheetApp.getUi()
-    .createMenu('UTokyo Booking System')
+    .createMenu('UTokyo Design Booking System')
     .addItem('Initialize Database Sheets', 'initDatabase')
     .addItem('Setup 12:00 PM Daily Reminder Trigger', 'setupDailyTrigger')
     .addToUi();

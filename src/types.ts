@@ -62,6 +62,7 @@ interface CalendarDay {
 interface CalendarViewModel {
   currentWeekStart: string;
   currentWeekEnd: string;
+  bookingDeadline: string;
   weekOffset: number;
   canNavigatePrev: boolean;
   canNavigateNext: boolean;
