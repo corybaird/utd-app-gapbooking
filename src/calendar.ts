@@ -40,7 +40,7 @@ class CalendarService {
       const currentMinute = referenceDate.getMinutes();
 
       if (currentDay === 5) {
-        if (currentHour > 23 || (currentHour === 23 && currentMinute >= 30)) {
+        if (currentHour > 23 || (currentHour === 23 && currentMinute > 59)) {
           return false;
         }
       } else if (currentDay === 6 || currentDay === 0) {
@@ -146,9 +146,17 @@ class CalendarService {
     const endMonth = String(displayedFriday.getMonth() + 1).padStart(2, '0');
     const endDay = String(displayedFriday.getDate()).padStart(2, '0');
 
+    const deadlineFriday = new Date(displayedMonday);
+    deadlineFriday.setDate(displayedMonday.getDate() - 3);
+    const dlYear = deadlineFriday.getFullYear();
+    const dlMonth = String(deadlineFriday.getMonth() + 1).padStart(2, '0');
+    const dlDay = String(deadlineFriday.getDate()).padStart(2, '0');
+    const deadlineString = `${dlYear}-${dlMonth}-${dlDay}`;
+
     return {
       currentWeekStart: `${startYear}-${startMonth}-${startDay}`,
       currentWeekEnd: `${endYear}-${endMonth}-${endDay}`,
+      bookingDeadline: `${deadlineString} (Fri) 23:59 JST (before the session week)`,
       weekOffset: weekOffset,
       canNavigatePrev: weekOffset > -1,
       canNavigateNext: weekOffset < 3,

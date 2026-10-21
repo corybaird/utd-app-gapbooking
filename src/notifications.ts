@@ -9,7 +9,7 @@ class NotificationService {
     const zoomUrl = this.getZoomUrl(record.courseId, record.startTime);
     const cancelUrl = `${webAppUrl}?action=cancel&id=${record.bookingId}&email=${encodeURIComponent(record.email)}`;
 
-    const subject = `[UTokyo English Sessions] Booking Confirmation: ${record.bookingDate} ${record.startTime}`;
+    const subject = `[UTokyo Design] Booking Confirmation: ${record.bookingDate} ${record.startTime}`;
     const body = `Dear ${record.givenName} ${record.familyName},
 
 Thank you for booking an English conversation session. Your reservation has been confirmed.
@@ -23,12 +23,12 @@ Course: ${record.courseName}
 Zoom Link: ${zoomUrl}
 
 [Cancellation Policy]
-Bookings can be changed or cancelled until Friday 23:29 JST before the session week.
+Bookings can be changed or cancelled until Friday 23:59 JST before the session week.
 To cancel your reservation, please visit the booking portal or click the cancellation link below:
 ${cancelUrl}
 
 [Contact Information]
-UTokyo English Session Administration Office
+UTokyo Design Session Administration Office
 Email: ${APP_CONFIG.SUPPORT_EMAIL}
 `;
 
@@ -40,7 +40,7 @@ Email: ${APP_CONFIG.SUPPORT_EMAIL}
   }
 
   public static sendCancellationConfirmation(record: BookingRecord): void {
-    const subject = `[UTokyo English Sessions] Cancellation Notice: ${record.bookingDate} ${record.startTime}`;
+    const subject = `[UTokyo Design] Cancellation Notice: ${record.bookingDate} ${record.startTime}`;
     const body = `Dear ${record.givenName} ${record.familyName},
 
 Your booking for the English conversation session has been cancelled as requested.
@@ -54,7 +54,7 @@ Course: ${record.courseName}
 If you wish to rebook for another session, please visit the booking portal.
 
 [Contact Information]
-UTokyo English Session Administration Office
+UTokyo Design Session Administration Office
 Email: ${APP_CONFIG.SUPPORT_EMAIL}
 `;
 
