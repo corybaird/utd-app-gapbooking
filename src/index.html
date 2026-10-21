@@ -172,10 +172,33 @@
     </div>
   </div>
 
+  <!-- Direct Cancel Confirmation Modal -->
+  <div id="confirmCancelModal" class="fixed inset-0 modal-backdrop hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full overflow-hidden">
+      <div class="bg-red-800 px-6 py-4 flex justify-between items-center text-white">
+        <h3 class="font-semibold text-lg">Confirm Cancellation</h3>
+        <button id="btnCloseConfirmCancelModal" class="text-red-200 hover:text-white">&times;</button>
+      </div>
+      <div class="p-6 space-y-4">
+        <p class="text-sm text-gray-700">Are you sure you want to cancel the following reservation?</p>
+        <div class="bg-gray-50 border rounded p-3 text-xs space-y-1">
+          <div><span class="font-semibold text-gray-700">Booking ID:</span> <span id="cancelModalBookingId" class="font-mono text-gray-900"></span></div>
+          <div><span class="font-semibold text-gray-700">Email:</span> <span id="cancelModalEmail" class="text-gray-900"></span></div>
+        </div>
+        <p class="text-xs text-red-600">This action cannot be undone. You will need to rebook if you change your mind.</p>
+        <div class="flex justify-end space-x-2 pt-2">
+          <button type="button" id="btnDismissCancelModal" class="px-4 py-2 border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-100">Keep Booking</button>
+          <button type="button" id="btnExecuteCancelModal" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm font-semibold">Cancel Booking</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     let currentWeekOffset = 0;
     let cachedCalendarData = null;
     let selectedSlot = null;
+    let pendingCancellation = null;
 
     window.onload = function() {
       loadCalendar(0);
@@ -185,9 +208,7 @@
       const prefillEmail = '<?= prefillEmail ?>';
 
       if (prefillAction === 'cancel' && prefillId && prefillEmail) {
-        if (confirm('Do you confirm cancelling booking ID ' + prefillId + '?')) {
-          executeCancellation(prefillId, prefillEmail);
-        }
+        promptCancellation(prefillId, prefillEmail);
       }
     };
 
@@ -386,6 +407,18 @@
         .apiCancelBooking(bookingId, email);
     }
 
+    function promptCancellation(bookingId, email) {
+      pendingCancellation = { bookingId, email };
+      document.getElementById('cancelModalBookingId').textContent = bookingId;
+      document.getElementById('cancelModalEmail').textContent = email;
+      document.getElementById('confirmCancelModal').classList.remove('hidden');
+    }
+
+    function closeCancelConfirmationModal() {
+      document.getElementById('confirmCancelModal').classList.add('hidden');
+      pendingCancellation = null;
+    }
+
     document.getElementById('btnSearchBookings').onclick = function() {
       const email = document.getElementById('inputSearchEmail').value.trim();
       if (!email) return;
@@ -397,20 +430,28 @@
         .withSuccessHandler(function(resJson) {
           const res = JSON.parse(resJson);
           if (!res.success || !res.data || res.data.length === 0) {
-            container.innerHTML = '<p class="text-xs text-gray-500 text-center py-2">No active bookings found for this email.</p>';
+            container.innerHTML = '<p class="text-xs text-gray-500 text-center py-2">No bookings found for this email.</p>';
             return;
           }
 
           container.innerHTML = '';
           res.data.forEach(b => {
+            const isCancelled = b.status === 'Cancelled';
             const item = document.createElement('div');
             item.className = 'p-3 bg-gray-50 border rounded flex justify-between items-center text-xs';
             item.innerHTML = `
               <div>
-                <div class="font-semibold text-gray-800">${b.bookingDate} at ${b.startTime}</div>
-                <div class="text-gray-500">${b.courseName} | ID: ${b.bookingId.substring(0, 8)}...</div>
+                <div class="flex items-center space-x-2">
+                  <span class="font-semibold text-gray-800">${b.bookingDate} at ${b.startTime}</span>
+                  <span class="px-1.5 py-0.5 rounded text-xs font-semibold ${isCancelled ? 'bg-gray-200 text-gray-600' : 'bg-green-100 text-green-800'}">${b.status}</span>
+                </div>
+                <div class="text-gray-500 mt-1">${b.courseName} | ID: ${b.bookingId.substring(0, 8)}...</div>
               </div>
-              <button class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs" onclick="executeCancellation('${b.bookingId}', '${b.email}')">Cancel</button>
+              <div>
+                ${!isCancelled 
+                  ? `<button class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-medium" onclick="promptCancellation('${b.bookingId}', '${b.email}')">Cancel</button>` 
+                  : `<span class="text-xs text-gray-400 italic">Cancelled</span>`}
+              </div>
             `;
             container.appendChild(item);
           });
@@ -444,6 +485,14 @@
     document.getElementById('btnCancelModal').onclick = closeBookingModal;
     document.getElementById('btnOpenMyBookings').onclick = () => document.getElementById('myBookingsModal').classList.remove('hidden');
     document.getElementById('btnCloseMyBookingsModal').onclick = () => document.getElementById('myBookingsModal').classList.add('hidden');
+    document.getElementById('btnCloseConfirmCancelModal').onclick = closeCancelConfirmationModal;
+    document.getElementById('btnDismissCancelModal').onclick = closeCancelConfirmationModal;
+    document.getElementById('btnExecuteCancelModal').onclick = function() {
+      if (!pendingCancellation) return;
+      const { bookingId, email } = pendingCancellation;
+      closeCancelConfirmationModal();
+      executeCancellation(bookingId, email);
+    };
   </script>
 </body>
 </html>

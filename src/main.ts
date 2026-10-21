@@ -43,7 +43,7 @@ function apiCancelBooking(bookingId: string, email: string): string {
 
 function apiGetUserBookings(email: string): string {
   try {
-    const bookings = BookingStorage.getActiveBookingsForUser('', email);
+    const bookings = BookingStorage.getUserBookings('', email);
     return JSON.stringify({ success: true, data: bookings });
   } catch (error: any) {
     return JSON.stringify({ success: false, error: error.message || 'Failed to fetch bookings' });
