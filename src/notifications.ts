@@ -48,7 +48,7 @@ Your booking for the English conversation session has been cancelled as requeste
 [Cancelled Session Details]
 Booking ID: ${record.bookingId}
 Date: ${record.bookingDate}
-Time: ${record.startTime}
+Time: ${record.startTime} (JST, 30 minutes)
 Course: ${record.courseName}
 
 If you wish to rebook for another session, please visit the booking portal.

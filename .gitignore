@@ -1,5 +1,24 @@
+# Dependencies and build artifacts
 node_modules/
-.clasp.json.backup
-.clasprc.json
 dist/
 *.log
+
+# Apps Script secrets and project identifiers
+.clasp.json
+.clasp.json.backup
+.clasprc.json
+
+# Environment variables and credentials
+.env
+.env.*
+*.pem
+*.key
+*.token
+
+# System metadata
+.DS_Store
+Thumbs.db
+
+# Internal design specifications
+docs/
+*.docx
