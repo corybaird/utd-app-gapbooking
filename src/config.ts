@@ -42,7 +42,7 @@ const ZOOM_URL_MAPPING = {
 };
 
 const APP_CONFIG = {
-  SPREADSHEET_ID: '1jeb2bd5xBQAs_8F84O2tAwrYYte3VS9k0VW8qv_jfek',
+  SPREADSHEET_ID: PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID') || '',
   TIMEZONE: 'Asia/Tokyo',
   MAX_DAILY_BOOKINGS_PER_USER: 1,
   MAX_WEEKLY_BOOKINGS_PER_USER: 5,
